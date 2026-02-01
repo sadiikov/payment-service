@@ -1,1 +1,5 @@
-spring.application.name=payment-project
+spring:
+  application:
+    name: payment-project
+server:
+  port: 8080
