@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: payment-service
+
+  profiles:
+    active: dev
+
+# ===============================
+# SERVER
+# ===============================
+server:
+  port: 8080
+  shutdown: graceful
+
+# ===============================
+# LOGGING
+# ===============================
+logging:
+  level:
+    root: INFO
+    org.springframework.web: INFO
+    org.hibernate: WARN
+  file:
+    name: logs/app.log
+
+# ===============================
+# JACKSON (JSON)
+# ===============================
+spring.jackson:
+  serialization:
+    indent-output: true
+
+# ===============================
+# MANAGEMENT (ACTUATOR, если понадобится)
+# ===============================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
