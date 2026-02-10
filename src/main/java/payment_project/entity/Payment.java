@@ -12,12 +12,16 @@ public class Payment {
     @Id
     @GeneratedValue
     private UUID id;
+
     @Column(nullable = false, unique = true)
     private UUID idempotencyKey;
+
     private Long userId;
     private Long amount;
+
     @Enumerated(EnumType.STRING)
     private Status status;
+
     private Instant createdAt;
 }
 
