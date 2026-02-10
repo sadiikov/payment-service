@@ -6,7 +6,9 @@ import jakarta.persistence.*;
 public class Wallet {
     @Id
     private Long userId;
+
     private Long balance;
+
     @Version
     private Integer version;
 }
