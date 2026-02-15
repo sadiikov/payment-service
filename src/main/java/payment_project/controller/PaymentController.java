@@ -5,7 +5,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import payment_project.dto.CreatePaymentRequest;
 import payment_project.dto.PaymentResponse;
-import payment_project.entity.Payment;
 import payment_project.service.PaymentService;
 
 import java.util.UUID;

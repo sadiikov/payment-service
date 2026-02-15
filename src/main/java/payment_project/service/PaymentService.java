@@ -2,7 +2,6 @@ package payment_project.service;
 
 import payment_project.dto.CreatePaymentRequest;
 import payment_project.dto.PaymentResponse;
-import payment_project.entity.Payment;
 
 import java.util.UUID;
 
