@@ -1,9 +1,10 @@
 package payment_project.controller;
 
 import lombok.AllArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import payment_project.dto.CreatePaymentRequest;
-import payment_project.entity.Payment;
+import payment_project.dto.PaymentResponse;
 import payment_project.service.PaymentService;
 
 import java.util.UUID;
@@ -16,12 +17,12 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     @PostMapping
-    public Payment createPayment(@RequestBody CreatePaymentRequest request) {
-        return paymentService.createPayment(request);
+    public ResponseEntity<PaymentResponse> createPayment(@RequestBody CreatePaymentRequest request) {
+        return ResponseEntity.accepted().body(paymentService.createPayment(request));
     }
 
     @GetMapping("/{id}")
-    public Payment getPayment(@PathVariable UUID id) {
-        return paymentService.getPaymentById(id);
+    public PaymentResponse getPayment(@PathVariable UUID id) {
+        return ResponseEntity.ok(paymentService.getPaymentById(id)).getBody();
     }
 }

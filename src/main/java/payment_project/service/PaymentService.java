@@ -1,11 +1,11 @@
 package payment_project.service;
 
 import payment_project.dto.CreatePaymentRequest;
-import payment_project.entity.Payment;
+import payment_project.dto.PaymentResponse;
 
 import java.util.UUID;
 
 public interface PaymentService {
-    Payment createPayment(CreatePaymentRequest createPaymentRequest);
-    Payment getPaymentById(UUID paymentId);
+    PaymentResponse createPayment(CreatePaymentRequest createPaymentRequest);
+    PaymentResponse getPaymentById(UUID paymentId);
 }
