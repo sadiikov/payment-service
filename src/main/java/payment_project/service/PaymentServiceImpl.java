@@ -1,10 +1,11 @@
 package payment_project.service;
 
-import org.springframework.scheduling.annotation.Async;
+import jakarta.persistence.EntityNotFoundException;
 import payment_project.dto.CreatePaymentRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import payment_project.dto.PaymentResponse;
 import payment_project.entity.Payment;
 import payment_project.entity.enums.Status;
 import payment_project.repository.PaymentRepository;
@@ -23,7 +24,7 @@ public class PaymentServiceImpl implements PaymentService {
     // Creating new payment request into db
     @Transactional
     @Override
-    public Payment createPayment(CreatePaymentRequest request) {
+    public PaymentResponse createPayment(CreatePaymentRequest request) {
         Payment payment = paymentRepository.findByIdempotencyKey(request.idempotencyKey())
                 .orElseGet(() -> {
                     Payment p = new Payment();
@@ -40,11 +41,13 @@ public class PaymentServiceImpl implements PaymentService {
 
         asyncProcessor.process(payment.getId());
 
-        return payment;
+        return new PaymentResponse(payment.getAmount(), payment.getStatus(), payment.getCreatedAt());
     }
 
     @Override
-    public Payment getPaymentById(UUID paymentId) {
-        return paymentRepository.findById(paymentId).orElseThrow();
+    public PaymentResponse getPaymentById(UUID paymentId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
+        return new PaymentResponse(payment.getAmount(), payment.getStatus(), payment.getCreatedAt());
     }
 }

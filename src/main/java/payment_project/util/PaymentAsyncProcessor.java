@@ -1,10 +1,9 @@
 package payment_project.util;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import payment_project.entity.Payment;
 import payment_project.entity.enums.Status;
 import payment_project.repository.PaymentRepository;
@@ -20,7 +19,7 @@ public class PaymentAsyncProcessor {
     public void process(UUID paymentId) {
         try {
             Payment payment = paymentRepository.findById(paymentId)
-                    .orElseThrow();
+                    .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
 
             payment.setStatus(Status.PENDING);
             paymentRepository.save(payment);
@@ -31,7 +30,8 @@ public class PaymentAsyncProcessor {
             payment.setStatus(Status.SUCCESS);
             paymentRepository.save(payment);
         }catch (Exception e) {
-            Payment payment = paymentRepository.findById(paymentId).orElseThrow();
+            Payment payment = paymentRepository.findById(paymentId)
+                    .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
             payment.setStatus(Status.FAILED);
             paymentRepository.save(payment);
         }
