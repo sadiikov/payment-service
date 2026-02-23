@@ -1,6 +1,7 @@
 package payment_project.util;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.OptimisticLockException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -43,8 +44,13 @@ public class PaymentAsyncProcessor {
             return;
         }
 
-        wallet.setBalance(wallet.getBalance() - payment.getAmount());
-        walletRepository.save(wallet);
+        try {
+            wallet.setBalance(wallet.getBalance() - payment.getAmount());
+            walletRepository.save(wallet);
+        }catch (OptimisticLockException e){
+            payment.setStatus(Status.FAILED);
+            paymentRepository.save(payment);
+        }
 
         payment.setStatus(Status.SUCCESS);
         paymentRepository.save(payment);
