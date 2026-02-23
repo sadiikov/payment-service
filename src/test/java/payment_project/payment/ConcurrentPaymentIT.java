@@ -2,9 +2,6 @@ package payment_project.payment;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.jdbc.Sql;
 import payment_project.base.AbstractIntegrationTest;
 import payment_project.dto.CreatePaymentRequest;
 import payment_project.entity.Wallet;
@@ -32,7 +29,6 @@ class ConcurrentPaymentIT extends AbstractIntegrationTest {
         ExecutorService executor = Executors.newFixedThreadPool(5);
 
         for(int i = 0; i < 5; i++) {
-            int idx = i;
             executor.submit(() ->
                     paymentService.createPayment(
                             new CreatePaymentRequest(2L, 50L, UUID.randomUUID()))
