@@ -25,4 +25,10 @@ public class PaymentController {
     public PaymentResponse getPayment(@PathVariable UUID id) {
         return ResponseEntity.ok(paymentService.getPaymentById(id)).getBody();
     }
+
+    @PostMapping("/refund/{id}")
+    public ResponseEntity<Void> refundPayment(@PathVariable UUID id) {
+        paymentService.refundPayment(id);
+        return ResponseEntity.ok().build();
+    }
 }
