@@ -3,7 +3,7 @@ package payment_project.payment;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import payment_project.base.AbstractIntegrationTest;
-import payment_project.dto.CreatePaymentRequest;
+import payment_project.entity.dto.CreatePaymentRequest;
 import payment_project.entity.Payment;
 import payment_project.entity.Wallet;
 import payment_project.entity.enums.Status;

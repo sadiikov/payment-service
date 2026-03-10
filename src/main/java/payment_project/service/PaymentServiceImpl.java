@@ -3,11 +3,12 @@ package payment_project.service;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.OptimisticLockException;
 import org.springframework.context.ApplicationEventPublisher;
-import payment_project.dto.CreatePaymentRequest;
+import org.springframework.dao.DataIntegrityViolationException;
+import payment_project.entity.dto.CreatePaymentRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import payment_project.dto.PaymentResponse;
+import payment_project.entity.dto.PaymentResponse;
 import payment_project.entity.Payment;
 import payment_project.entity.Wallet;
 import payment_project.entity.enums.Status;
@@ -15,7 +16,6 @@ import payment_project.events.PaymentCreatedEvent;
 import payment_project.events.PaymentRefundedEvent;
 import payment_project.repository.PaymentRepository;
 import payment_project.repository.WalletRepository;
-import payment_project.util.PaymentAsyncProcessor;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -42,7 +42,13 @@ public class PaymentServiceImpl implements PaymentService {
                     p.setStatus(Status.NEW);
                     p.setCreatedAt(Instant.now());
 
-                    return paymentRepository.save(p);
+                    try {
+                        return paymentRepository.save(p);
+                    }catch (DataIntegrityViolationException e){
+                        return paymentRepository
+                                .findByIdempotencyKey(request.idempotencyKey())
+                                .orElseThrow(() -> new DataIntegrityViolationException(e.getMessage()));
+                    }
                 });
 
         paymentRepository.flush();
