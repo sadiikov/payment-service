@@ -4,11 +4,15 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.OptimisticLockException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import payment_project.entity.Payment;
 import payment_project.entity.Wallet;
 import payment_project.entity.enums.Status;
+import payment_project.events.PaymentCreatedEvent;
+import payment_project.events.PaymentFailedEvent;
+import payment_project.events.PaymentSucceededEvent;
 import payment_project.repository.PaymentRepository;
 import payment_project.repository.WalletRepository;
 
@@ -20,6 +24,7 @@ import java.util.UUID;
 public class PaymentAsyncProcessor {
     private final PaymentRepository paymentRepository;
     private final WalletRepository walletRepository;
+    private final ApplicationEventPublisher publisher;
 
     @Async
     public void process(UUID paymentId) {
@@ -41,6 +46,11 @@ public class PaymentAsyncProcessor {
         if(wallet.getBalance() < payment.getAmount()) {
             payment.setStatus(Status.FAILED);
             paymentRepository.save(payment);
+
+            publisher.publishEvent(new PaymentFailedEvent(
+                    payment.getId(), payment.getUserId(), payment.getAmount())
+            );
+
             return;
         }
 
@@ -54,5 +64,9 @@ public class PaymentAsyncProcessor {
 
         payment.setStatus(Status.SUCCESS);
         paymentRepository.save(payment);
+
+        publisher.publishEvent(new PaymentSucceededEvent(
+                payment.getId(), payment.getUserId(), payment.getAmount()
+        ));
     }
 }
