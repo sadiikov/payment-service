@@ -2,6 +2,7 @@ package payment_project.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.OptimisticLockException;
+import org.springframework.context.ApplicationEventPublisher;
 import payment_project.dto.CreatePaymentRequest;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,8 @@ import payment_project.dto.PaymentResponse;
 import payment_project.entity.Payment;
 import payment_project.entity.Wallet;
 import payment_project.entity.enums.Status;
+import payment_project.events.PaymentCreatedEvent;
+import payment_project.events.PaymentRefundedEvent;
 import payment_project.repository.PaymentRepository;
 import payment_project.repository.WalletRepository;
 import payment_project.util.PaymentAsyncProcessor;
@@ -24,6 +27,7 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final PaymentAsyncProcessor asyncProcessor;
     private final WalletRepository walletRepository;
+    private final ApplicationEventPublisher publisher;
 
     // Creating new payment request into db
     @Transactional
@@ -44,6 +48,10 @@ public class PaymentServiceImpl implements PaymentService {
         paymentRepository.flush();
 
         asyncProcessor.process(payment.getId());
+
+        publisher.publishEvent(
+                new PaymentCreatedEvent(payment.getId(), payment.getUserId(), payment.getAmount())
+        );
 
         return new PaymentResponse(payment.getAmount(), payment.getStatus(), payment.getCreatedAt());
     }
@@ -79,6 +87,10 @@ public class PaymentServiceImpl implements PaymentService {
             wallet.setBalance(wallet.getBalance() - payment.getAmount());
             walletRepository.save(wallet);
         }
+
+        publisher.publishEvent(
+                new PaymentRefundedEvent(payment.getId(), payment.getUserId(), payment.getAmount())
+        );
 
         payment.setStatus(Status.REFUNDED);
         paymentRepository.save(payment);
