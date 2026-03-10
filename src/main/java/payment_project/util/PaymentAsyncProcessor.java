@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import payment_project.entity.Payment;
 import payment_project.entity.Wallet;
 import payment_project.entity.enums.Status;
-import payment_project.events.PaymentCreatedEvent;
 import payment_project.events.PaymentFailedEvent;
 import payment_project.events.PaymentSucceededEvent;
 import payment_project.repository.PaymentRepository;
