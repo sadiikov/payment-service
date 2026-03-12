@@ -18,7 +18,7 @@ public class PaymentRecoveryWorker {
     private static final Logger log = LoggerFactory.getLogger(PaymentRecoveryWorker.class);
     private final PaymentRepository paymentRepository;
 
-    @Scheduled(fixedDelay = 6000)
+    @Scheduled(fixedDelay = 30000)
     public void recoveryStuckPayments() {
         Instant threshold = Instant.now().minusSeconds(300);
 

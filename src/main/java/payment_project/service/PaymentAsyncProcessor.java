@@ -7,8 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 import payment_project.entity.Payment;
 import payment_project.entity.Wallet;
 import payment_project.entity.enums.Status;
@@ -29,24 +27,6 @@ public class PaymentAsyncProcessor {
 
     @Async
     public void process(UUID paymentId) {
-        for (int tries = 0; tries < 3; tries++){
-            try {
-                if(tries > 0){
-                    log.warn("Retry payment {} attempt {}", paymentId, tries);
-                }
-
-                processInternal(paymentId);
-                return;
-            }catch (OptimisticLockException e){
-                try {
-                    Thread.sleep(100);
-                }catch (InterruptedException ignored){}
-            }
-        }
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void processInternal(UUID paymentId) {
         try {
             Payment payment = paymentRepository.findById(paymentId)
                     .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
