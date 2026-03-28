@@ -7,6 +7,8 @@ import java.util.UUID;
 
 public interface PaymentService {
     PaymentResponse createPayment(CreatePaymentRequest createPaymentRequest);
+
     PaymentResponse getPaymentById(UUID paymentId);
+
     void refundPayment(UUID paymentId);
 }

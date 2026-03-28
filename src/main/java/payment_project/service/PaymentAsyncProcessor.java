@@ -1,7 +1,6 @@
 package payment_project.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.OptimisticLockException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -27,10 +26,10 @@ public class PaymentAsyncProcessor {
 
     @Async
     public void process(UUID paymentId) {
-        try {
-            Payment payment = paymentRepository.findById(paymentId)
-                    .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
 
+        try {
             log.info("Payment userId = {}, amount = {}, status = {}"
                     , payment.getUserId(), payment.getAmount(), payment.getStatus());
 
@@ -54,13 +53,8 @@ public class PaymentAsyncProcessor {
                 return;
             }
 
-            try {
-                wallet.setBalance(wallet.getBalance() - payment.getAmount());
-                walletRepository.save(wallet);
-            } catch (OptimisticLockException e) {
-                payment.setStatus(Status.FAILED);
-                paymentRepository.save(payment);
-            }
+            wallet.setBalance(wallet.getBalance() - payment.getAmount());
+            walletRepository.save(wallet);
 
             payment.setStatus(Status.SUCCESS);
             paymentRepository.save(payment);
@@ -68,14 +62,11 @@ public class PaymentAsyncProcessor {
             publisher.publishEvent(new PaymentSucceededEvent(
                     payment.getId(), payment.getUserId(), payment.getAmount()
             ));
-        }catch (Exception e){
-            Payment payment = paymentRepository.findById(paymentId)
-                    .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
-
+        } catch (Exception e) {
             payment.setStatus(Status.FAILED);
             paymentRepository.save(payment);
 
-            throw e;
+            log.error("Async processing failed payment {}", paymentId, e);
         }
     }
 }
