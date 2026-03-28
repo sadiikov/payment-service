@@ -11,18 +11,10 @@ import java.util.UUID;
 @Entity
 @Setter
 @Getter
-@Table(
-        uniqueConstraints = {
-                @UniqueConstraint(columnNames = "idempotency_key")
-        }
-)
 public class Payment {
     @Id
     @GeneratedValue
     private UUID id;
-
-    @Column(name = "idempotency_key", nullable = false, unique = true)
-    private UUID idempotencyKey;
 
     private Long userId;
     private Long amount;

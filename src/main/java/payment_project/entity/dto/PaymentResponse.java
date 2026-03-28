@@ -8,4 +8,5 @@ public record PaymentResponse(
         Long amount,
         Status status,
         Instant createdAt
-) {}
+) {
+}

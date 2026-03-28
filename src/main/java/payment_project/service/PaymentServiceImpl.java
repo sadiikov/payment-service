@@ -2,15 +2,14 @@ package payment_project.service;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.OptimisticLockException;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.dao.DataIntegrityViolationException;
-import payment_project.entity.dto.CreatePaymentRequest;
 import lombok.AllArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import payment_project.entity.dto.PaymentResponse;
 import payment_project.entity.Payment;
 import payment_project.entity.Wallet;
+import payment_project.entity.dto.CreatePaymentRequest;
+import payment_project.entity.dto.PaymentResponse;
 import payment_project.entity.enums.Status;
 import payment_project.events.PaymentCreatedEvent;
 import payment_project.events.PaymentRefundedEvent;
@@ -33,25 +32,13 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     @Override
     public PaymentResponse createPayment(CreatePaymentRequest request) {
-        Payment payment = paymentRepository.findByIdempotencyKey(request.idempotencyKey())
-                .orElseGet(() -> {
-                    Payment p = new Payment();
-                    p.setIdempotencyKey(request.idempotencyKey());
-                    p.setUserId(request.userId());
-                    p.setAmount(request.amount());
-                    p.setStatus(Status.NEW);
-                    p.setCreatedAt(Instant.now());
+        Payment payment = new Payment();
+        payment.setUserId(request.userId());
+        payment.setAmount(request.amount());
+        payment.setStatus(Status.NEW);
+        payment.setCreatedAt(Instant.now());
 
-                    try {
-                        return paymentRepository.save(p);
-                    }catch (DataIntegrityViolationException e){
-                        return paymentRepository
-                                .findByIdempotencyKey(request.idempotencyKey())
-                                .orElseThrow(() -> new DataIntegrityViolationException(e.getMessage()));
-                    }
-                });
-
-        paymentRepository.flush();
+        paymentRepository.saveAndFlush(payment);
 
         asyncProcessor.process(payment.getId());
 
@@ -75,11 +62,7 @@ public class PaymentServiceImpl implements PaymentService {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
 
-        if (payment.getStatus() == Status.REFUNDED) {
-            throw new OptimisticLockException("Payment already refunded");
-        }
-
-        if(payment.getStatus() != Status.SUCCESS) {
+        if (payment.getStatus() != Status.SUCCESS && payment.getStatus() == Status.REFUNDED) {
             throw new IllegalStateException("Only successful payment can be refunded");
         }
 
@@ -89,7 +72,7 @@ public class PaymentServiceImpl implements PaymentService {
         try {
             wallet.setBalance(wallet.getBalance() + payment.getAmount());
             walletRepository.save(wallet);
-        }catch (OptimisticLockException e){
+        } catch (OptimisticLockException e) {
             wallet.setBalance(wallet.getBalance() - payment.getAmount());
             walletRepository.save(wallet);
         }

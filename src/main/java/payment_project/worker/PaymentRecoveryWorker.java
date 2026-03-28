@@ -20,19 +20,30 @@ public class PaymentRecoveryWorker {
 
     @Scheduled(fixedDelay = 30000)
     public void recoveryStuckPayments() {
-        Instant threshold = Instant.now().minusSeconds(300);
+        Instant threshold = Instant.now().minusSeconds(600);
 
         List<Payment> stuckPayments =
-                paymentRepository.findByStatusAndCreatedAtBefore(
-                        Status.PENDING,
+                paymentRepository.findByStatusInAndCreatedAtBefore(
+                        List.of(Status.NEW, Status.PENDING),
                         threshold
                 );
 
-        for (Payment payment : stuckPayments) {
-            payment.setStatus(Status.FAILED);
-            paymentRepository.save(payment);
-
-            log.info("Payment " + payment.getId() + " has been successfully recovered");
+        if (stuckPayments.isEmpty()) {
+            return;
         }
+
+        for (Payment payment : stuckPayments) {
+
+            if (payment.getStatus() == Status.SUCCESS ||
+                    payment.getStatus() == Status.FAILED) {
+                continue;
+            }
+
+            payment.setStatus(Status.FAILED);
+
+            log.warn("Payment {} has been successfully recovered", payment.getId());
+        }
+
+        paymentRepository.saveAll(stuckPayments);
     }
 }
