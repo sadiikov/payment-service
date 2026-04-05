@@ -1,14 +1,13 @@
 package payment_project.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.OptimisticLockException;
 import lombok.AllArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import payment_project.entity.Payment;
-import payment_project.entity.Wallet;
 import payment_project.entity.dto.CreatePaymentRequest;
+import payment_project.entity.dto.PaymentInfo;
 import payment_project.entity.dto.PaymentResponse;
 import payment_project.entity.enums.Status;
 import payment_project.events.PaymentCreatedEvent;
@@ -24,11 +23,9 @@ import java.util.UUID;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final PaymentAsyncProcessor asyncProcessor;
     private final WalletRepository walletRepository;
     private final ApplicationEventPublisher publisher;
 
-    // Creating new payment request into db
     @Transactional
     @Override
     public PaymentResponse createPayment(CreatePaymentRequest request) {
@@ -38,9 +35,7 @@ public class PaymentServiceImpl implements PaymentService {
         payment.setStatus(Status.NEW);
         payment.setCreatedAt(Instant.now());
 
-        paymentRepository.saveAndFlush(payment);
-
-        asyncProcessor.process(payment.getId());
+        paymentRepository.save(payment);
 
         publisher.publishEvent(
                 new PaymentCreatedEvent(payment.getId(), payment.getUserId(), payment.getAmount())
@@ -59,29 +54,20 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     @Override
     public void refundPayment(UUID paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
+        Status status = paymentRepository.getStatus(paymentId);
 
-        if (payment.getStatus() != Status.SUCCESS && payment.getStatus() == Status.REFUNDED) {
-            throw new IllegalStateException("Only successful payment can be refunded");
+        if (status != Status.SUCCESS) {
+            throw new IllegalArgumentException("Only successful payment can be refunded");
         }
 
-        Wallet wallet = walletRepository.findById(payment.getUserId())
-                .orElseThrow(() -> new EntityNotFoundException("Wallet not found"));
+        PaymentInfo info = paymentRepository.getPaymentInfo(paymentId);
 
-        try {
-            wallet.setBalance(wallet.getBalance() + payment.getAmount());
-            walletRepository.save(wallet);
-        } catch (OptimisticLockException e) {
-            wallet.setBalance(wallet.getBalance() - payment.getAmount());
-            walletRepository.save(wallet);
-        }
+        walletRepository.deposit(info.userId(), info.amount());
 
-        publisher.publishEvent(
-                new PaymentRefundedEvent(payment.getId(), payment.getUserId(), payment.getAmount())
+        paymentRepository.updateStatus(paymentId, Status.REFUNDED);
+
+        publisher.publishEvent(new PaymentRefundedEvent(
+                paymentId, info.userId(), info.amount())
         );
-
-        payment.setStatus(Status.REFUNDED);
-        paymentRepository.save(payment);
     }
 }
