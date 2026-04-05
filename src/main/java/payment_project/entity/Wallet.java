@@ -2,7 +2,6 @@ package payment_project.entity;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,7 +13,4 @@ public class Wallet {
     private Long userId;
 
     private Long balance;
-
-    @Version
-    private Integer version;
 }

@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import payment_project.entity.Payment;
-import payment_project.entity.Wallet;
 import payment_project.entity.enums.Status;
 import payment_project.events.PaymentFailedEvent;
 import payment_project.events.PaymentSucceededEvent;
@@ -25,48 +25,36 @@ public class PaymentAsyncProcessor {
     private final ApplicationEventPublisher publisher;
 
     @Async
+    @Transactional
     public void process(UUID paymentId) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new EntityNotFoundException("Payment not found"));
 
         try {
-            log.info("Payment userId = {}, amount = {}, status = {}"
-                    , payment.getUserId(), payment.getAmount(), payment.getStatus());
+            paymentRepository.updateStatus(paymentId, Status.PENDING);
 
-            payment.setStatus(Status.PENDING);
-            paymentRepository.save(payment);
+            int updated = walletRepository.withdraw(
+                    payment.getUserId(),
+                    payment.getAmount()
+            );
 
-            Wallet wallet = walletRepository.findById(payment.getUserId())
-                    .orElseThrow(() -> new EntityNotFoundException("Wallet not found"));
-
-            log.info("Wallet userId = {}, balance = {}, version = {}"
-                    , wallet.getUserId(), wallet.getBalance(), wallet.getVersion());
-
-            if (wallet.getBalance() < payment.getAmount()) {
-                payment.setStatus(Status.FAILED);
-                paymentRepository.save(payment);
+            if (updated == 0) {
+                paymentRepository.updateStatus(paymentId, Status.FAILED);
 
                 publisher.publishEvent(new PaymentFailedEvent(
-                        payment.getId(), payment.getUserId(), payment.getAmount())
-                );
-
+                        payment.getId(), payment.getUserId(), payment.getAmount()
+                ));
                 return;
             }
 
-            wallet.setBalance(wallet.getBalance() - payment.getAmount());
-            walletRepository.save(wallet);
-
-            payment.setStatus(Status.SUCCESS);
-            paymentRepository.save(payment);
+            paymentRepository.updateStatus(paymentId, Status.SUCCESS);
 
             publisher.publishEvent(new PaymentSucceededEvent(
                     payment.getId(), payment.getUserId(), payment.getAmount()
             ));
         } catch (Exception e) {
-            payment.setStatus(Status.FAILED);
-            paymentRepository.save(payment);
-
-            log.error("Async processing failed payment {}", paymentId, e);
+            paymentRepository.updateStatus(paymentId, Status.FAILED);
+            log.error("Payment failed {}", paymentId, e);
         }
     }
 }
