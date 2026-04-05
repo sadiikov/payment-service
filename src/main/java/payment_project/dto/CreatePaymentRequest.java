@@ -1,4 +1,4 @@
-package payment_project.entity.dto;
+package payment_project.dto;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;

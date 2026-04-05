@@ -4,7 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import payment_project.entity.Payment;
-import payment_project.entity.dto.PaymentInfo;
+import payment_project.dto.PaymentInfo;
 import payment_project.entity.enums.Status;
 
 import java.time.Instant;
@@ -29,7 +29,7 @@ public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     Status getStatus(UUID id);
 
     @Query("""
-                SELECT new payment_project.entity.dto.PaymentInfo(p.userId, p.amount)
+                SELECT new payment_project.dto.PaymentInfo(p.userId, p.amount)
                 FROM Payment p
                 WHERE p.id = :id
             """)

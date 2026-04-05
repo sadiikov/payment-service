@@ -21,5 +21,5 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
                 SET w.balance = w.balance + :amount
                 WHERE w.userId = :userId
             """)
-    int deposit(Long userId, Long amount);
+    void deposit(Long userId, Long amount);
 }
