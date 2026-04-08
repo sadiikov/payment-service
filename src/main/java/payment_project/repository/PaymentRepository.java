@@ -15,7 +15,7 @@ import java.util.UUID;
 public interface PaymentRepository extends JpaRepository<Payment, UUID> {
     List<Payment> findByStatusInAndCreatedAtBefore(Collection<Status> statuses, Instant createdAtBefore);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("""
                 UPDATE Payment p
                 SET p.status = :status
