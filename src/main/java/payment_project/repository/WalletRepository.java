@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import payment_project.entity.Wallet;
 
 public interface WalletRepository extends JpaRepository<Wallet, Long> {
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("""
                 UPDATE Wallet w
                 SET w.balance = w.balance - :amount
@@ -15,7 +15,7 @@ public interface WalletRepository extends JpaRepository<Wallet, Long> {
             """)
     int withdraw(Long userId, Long amount);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("""
                 UPDATE Wallet w
                 SET w.balance = w.balance + :amount
