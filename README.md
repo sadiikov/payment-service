@@ -23,9 +23,9 @@ This service accepts payment requests, processes them asynchronously, and update
 7. If there is unprocessed payments, worker will repair their status
 
 ## API
-POST /api/v1/payments
-GET /api/v1/payments/{id}
-POST /api/v1/payments/refund/{id}
+- POST /api/v1/payments
+- GET /api/v1/payments/{id}
+- POST /api/v1/payments/refund/{id}
 
 ## Stack
 - Java 17
