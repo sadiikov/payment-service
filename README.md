@@ -40,4 +40,4 @@ POST /api/v1/payments/refund/{id}
 2. Payment is saved with status NEW
 3. Processing starts asynchronously
 4. Status changes: NEW -> PENDING -> SUCCESS / FAILED
-Controller -> Service -> Async processor -> Wallet -> Database
+5. Controller -> Service -> Async processor -> Wallet -> Database
