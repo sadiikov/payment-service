@@ -2,10 +2,15 @@ spring:
   application:
     name: payment-project
   datasource:
-    url: jdbc:postgresql://localhost:5432/payment_project
+    url: jdbc:postgresql://localhost:5432/payment_db
     username: postgres
-    password: root123
+    password: postgres
     driver-class-name: org.postgresql.Driver
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
   jpa:
     database: postgresql
     hibernate:
