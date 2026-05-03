@@ -12,10 +12,12 @@ import payment_project.dto.PaymentResponse;
 import payment_project.entity.enums.Status;
 import payment_project.events.PaymentCreatedEvent;
 import payment_project.events.PaymentRefundedEvent;
+import payment_project.mapper.PaymentMapper;
 import payment_project.repository.PaymentRepository;
 import payment_project.repository.WalletRepository;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -69,5 +71,14 @@ public class PaymentServiceImpl implements PaymentService {
         publisher.publishEvent(new PaymentRefundedEvent(
                 paymentId, info.userId(), info.amount())
         );
+    }
+
+    @Override
+    public List<PaymentResponse> getPayments(){
+        List<Payment> payments = paymentRepository.findAll();
+
+        return payments.stream()
+                .map(PaymentMapper::toResponse)
+                .toList();
     }
 }
