@@ -1,18 +1,16 @@
 package payment_project.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import lombok.AllArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import payment_project.entity.Payment;
 import payment_project.dto.CreatePaymentRequest;
 import payment_project.dto.PaymentInfo;
 import payment_project.dto.PaymentResponse;
+import payment_project.entity.Payment;
 import payment_project.entity.enums.Status;
-import payment_project.events.PaymentCreatedEvent;
-import payment_project.events.PaymentRefundedEvent;
 import payment_project.mapper.PaymentMapper;
+import payment_project.publisher.PaymentEventPublisher;
 import payment_project.repository.PaymentRepository;
 import payment_project.repository.WalletRepository;
 
@@ -21,12 +19,12 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final WalletRepository walletRepository;
-    private final ApplicationEventPublisher publisher;
+    private final PaymentEventPublisher eventPublisher;
 
     @Transactional
     @Override
@@ -39,9 +37,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         paymentRepository.save(payment);
 
-        publisher.publishEvent(
-                new PaymentCreatedEvent(payment.getId(), payment.getUserId(), payment.getAmount())
-        );
+        eventPublisher.publishCreated(payment);
 
         return new PaymentResponse(payment.getAmount(), payment.getStatus(), payment.getCreatedAt());
     }
@@ -68,9 +64,7 @@ public class PaymentServiceImpl implements PaymentService {
 
         paymentRepository.updateStatus(paymentId, Status.REFUNDED);
 
-        publisher.publishEvent(new PaymentRefundedEvent(
-                paymentId, info.userId(), info.amount())
-        );
+        eventPublisher.publishRefunded(paymentId, info.userId(), info.amount());
     }
 
     @Override

@@ -5,10 +5,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
 import payment_project.dto.CreatePaymentRequest;
 import payment_project.entity.Payment;
-import payment_project.events.PaymentCreatedEvent;
+import payment_project.publisher.PaymentEventPublisher;
 import payment_project.repository.PaymentRepository;
 import payment_project.service.PaymentServiceImpl;
 
@@ -21,8 +20,7 @@ class PaymentServiceTest {
     @Mock
     PaymentRepository paymentRepository;
     @Mock
-    ApplicationEventPublisher publisher;
-
+    PaymentEventPublisher eventPublisher;
     @InjectMocks
     PaymentServiceImpl service;
 
@@ -33,6 +31,6 @@ class PaymentServiceTest {
         service.createPayment(request);
 
         verify(paymentRepository).save(any(Payment.class));
-        verify(publisher).publishEvent(any(PaymentCreatedEvent.class));
+        verify(eventPublisher).publishCreated(any(Payment.class));
     }
 }
