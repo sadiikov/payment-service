@@ -3,14 +3,10 @@ package payment_project.listener;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
-import payment_project.events.PaymentCreatedEvent;
-import payment_project.events.PaymentFailedEvent;
-import payment_project.events.PaymentRefundedEvent;
-import payment_project.events.PaymentSucceededEvent;
+import payment_project.cfg.RabbitConfig;
+import payment_project.events.PaymentEvent;
 import payment_project.service.PaymentAsyncProcessor;
 
 @Component
@@ -19,26 +15,26 @@ public class PaymentEventListener {
     private final PaymentAsyncProcessor asyncProcessor;
     private static final Logger log = LoggerFactory.getLogger(PaymentEventListener.class);
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handlePaymentCreated(PaymentCreatedEvent event) {
+    @RabbitListener(queues = RabbitConfig.CREATED_QUEUE)
+    public void handlePaymentCreated(PaymentEvent event) {
         log.info("Payment created {}, {}, {}", event.paymentId(), event.userId(), event.amount());
 
         asyncProcessor.process(event.paymentId());
     }
 
-    @EventListener
-    public void handlePaymentSuccess(PaymentSucceededEvent event) {
+    @RabbitListener(queues = RabbitConfig.SUCCESS_QUEUE)
+    public void handlePaymentSuccess(PaymentEvent event) {
         log.info("Payment successful {}, {}, {}", event.paymentId(), event.userId(), event.amount());
 
     }
 
-    @EventListener
-    public void handlePaymentFailed(PaymentFailedEvent event) {
+    @RabbitListener(queues = RabbitConfig.FAILED_QUEUE)
+    public void handlePaymentFailed(PaymentEvent event) {
         log.error("Payment failed {}, {}, {}", event.paymentId(), event.userId(), event.amount());
     }
 
-    @EventListener
-    public void handlePaymentRefunded(PaymentRefundedEvent event) {
+    @RabbitListener(queues = RabbitConfig.REFUNDED_QUEUE)
+    public void handlePaymentRefunded(PaymentEvent event) {
         log.info("Payment refunded {}, {}, {}", event.paymentId(), event.userId(), event.amount());
     }
 }

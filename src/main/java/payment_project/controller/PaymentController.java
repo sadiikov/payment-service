@@ -7,6 +7,7 @@ import payment_project.dto.CreatePaymentRequest;
 import payment_project.dto.PaymentResponse;
 import payment_project.service.PaymentService;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -24,6 +25,11 @@ public class PaymentController {
     @GetMapping("/{id}")
     public PaymentResponse getPayment(@PathVariable UUID id) {
         return ResponseEntity.ok(paymentService.getPaymentById(id)).getBody();
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PaymentResponse>> getPayments(){
+        return ResponseEntity.ok(paymentService.getPayments());
     }
 
     @PostMapping("/refund/{id}")

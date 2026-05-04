@@ -20,7 +20,7 @@ public class PaymentRecoveryWorker {
 
     @Scheduled(fixedDelay = 30000)
     public void recoveryStuckPayments() {
-        Instant threshold = Instant.now().minusSeconds(600);
+        Instant threshold = Instant.now().minusSeconds(300);
 
         List<Payment> stuckPayments =
                 paymentRepository.findByStatusInAndCreatedAtBefore(

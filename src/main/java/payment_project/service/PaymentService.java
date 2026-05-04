@@ -3,6 +3,7 @@ package payment_project.service;
 import payment_project.dto.CreatePaymentRequest;
 import payment_project.dto.PaymentResponse;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface PaymentService {
@@ -11,4 +12,6 @@ public interface PaymentService {
     PaymentResponse getPaymentById(UUID paymentId);
 
     void refundPayment(UUID paymentId);
+
+    List<PaymentResponse> getPayments();
 }
